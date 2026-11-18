@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Галерея</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            color: #222;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.6rem;
+            margin: 24px 16px;
+        }
+
+        .gallery {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 12px;
+        }
+
+        .viewport {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .track {
+            display: flex;
+            transition: transform 0.4s ease;
+        }
+
+        /* 3 изображения на экране */
+        .slide {
+            flex: 0 0 33.3333%;
+            box-sizing: border-box;
+            padding: 0 6px;
+        }
+
+        .slide img {
+            display: block;
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .arrow {
+            flex: 0 0 auto;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 50%;
+            background: #2a7de1;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .arrow:disabled {
+            background: #aaa;
+            cursor: default;
+        }
+
+        .pager {
+            text-align: center;
+            margin: 20px 0 8px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 50%;
+            background: #bbb;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: #2a7de1;
+        }
+
+        .counter {
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        /* На смартфонах — 1 изображение */
+        @media (max-width: 600px) {
+            .slide {
+                flex: 0 0 100%;
+            }
+
+            .slide img {
+                height: 240px;
+            }
+
+            .arrow {
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Моя галерея</h1>
+
+    <div class="gallery">
+        <button class="arrow" id="prev" type="button" aria-label="Назад">&larr;</button>
+
+        <div class="viewport">
+            <div class="track" id="track">
+                <!-- ===== ВСТАВЬ СВОИ ФОТО ЗДЕСЬ (8 штук) ===== -->
+                <!-- Меняй путь в src и текст в alt -->
+                <div class="slide"><img src="1 (1).jpg" alt="Фото 1"></div>
+                <div class="slide"><img src="1 (2).jpg" alt="Фото 2"></div>
+                <div class="slide"><img src="1 (3).jpg" alt="Фото 3"></div>
+                <div class="slide"><img src="1 (4).jpg" alt="Фото 4"></div>
+                <div class="slide"><img src="1 (5).jpg" alt="Фото 5"></div>
+                <div class="slide"><img src="1 (6).jpg" alt="Фото 6"></div>
+                <div class="slide"><img src="1 (7).jpg" alt="Фото 7"></div>
+                <div class="slide"><img src="1 (8).jpg" alt="Фото 8"></div>
+                <!-- ============================================ -->
+            </div>
+        </div>
+
+        <button class="arrow" id="next" type="button" aria-label="Вперёд">&rarr;</button>
+    </div>
+
+    <div class="pager" id="pager"></div>
+    <div class="counter" id="counter"></div>
+
+    <script>
+        /*jslint browser, this, for */
+        (function () {
+            "use strict";
+
+            const track = document.getElementById("track");
+            const prev = document.getElementById("prev");
+            const next = document.getElementById("next");
+            const pager = document.getElementById("pager");
+            const counter = document.getElementById("counter");
+            const total = track.children.length;
+            const mobileQuery = window.matchMedia("(max-width: 600px)");
+
+            let perView = 3;
+            let pages = 1;
+            let page = 0;
+
+            function render() {
+                // Последняя страница не должна уходить за край ленты
+                const index = Math.min(page * perView, total - perView);
+                const shift = index * (100 / perView);
+                track.style.transform = "translateX(-" + shift + "%)";
+
+                prev.disabled = page === 0;
+                next.disabled = page === pages - 1;
+
+                Array.from(pager.children).forEach(function (dot, i) {
+                    dot.classList.toggle("active", i === page);
+                });
+
+                counter.textContent = "Страница " + (page + 1) + " из " + pages;
+            }
+
+            function goTo(newPage) {
+                page = Math.max(0, Math.min(newPage, pages - 1));
+                render();
+            }
+
+            function buildPager() {
+                pager.textContent = "";
+                Array.from({length: pages}).forEach(function (ignore, i) {
+                    const dot = document.createElement("button");
+                    dot.type = "button";
+                    dot.className = "dot";
+                    dot.setAttribute("aria-label", "Страница " + (i + 1));
+                    dot.addEventListener("click", function () {
+                        goTo(i);
+                    });
+                    pager.appendChild(dot);
+                });
+            }
+
+            function setup() {
+                perView = (
+                    mobileQuery.matches
+                    ? 1
+                    : 3
+                );
+                pages = Math.ceil(total / perView);
+                page = 0;
+                buildPager();
+                render();
+            }
+
+            prev.addEventListener("click", function () {
+                goTo(page - 1);
+            });
+
+            next.addEventListener("click", function () {
+                goTo(page + 1);
+            });
+
+            mobileQuery.addEventListener("change", setup);
+            setup();
+        }());
+    </script>
+</body>
+</html>
